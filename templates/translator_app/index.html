@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Translator</title>
+  <meta name="description" content="Translate text between languages instantly.">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <!-- Fonts: Fraunces (display), Work Sans (body), JetBrains Mono (utility) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+  <!-- Rotating greeting ticker -->
+  <div class="ticker-bar" aria-hidden="true">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <header class="site-header">
+    <div class="container d-flex align-items-center justify-content-between py-3">
+      <div class="brand">
+        <span class="brand-mark">文</span>
+        <span class="brand-name">Lingo<em>Stamp</em></span>
+      </div>
+      <button id="themeToggle" class="btn btn-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="hero text-center">
+      <p class="eyebrow">No paid API keys required</p>
+      <h1 class="hero-title">Say it in <span class="hero-underline">any</span> language.</h1>
+      <p class="hero-sub">Type, translate, listen, and keep a passport of everything you've said.</p>
+    </section>
+
+    <section class="translator-card">
+
+      <div class="lang-bar">
+        <div class="lang-select-wrap">
+          <label class="lang-label" for="sourceLang">From</label>
+          <select id="sourceLang" class="form-select lang-select">
+            {% for code, name in languages.items %}
+              <option value="{{ code }}" {% if code == "auto" %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
+          <span class="detected-badge d-none" id="detectedBadge"></span>
+        </div>
+
+        <button id="swapBtn" class="swap-btn" title="Swap languages" aria-label="Swap languages">
+          <i class="fa-solid fa-right-left"></i>
+        </button>
+
+        <div class="lang-select-wrap">
+          <label class="lang-label" for="targetLang">To</label>
+          <select id="targetLang" class="form-select lang-select">
+            {% for code, name in languages.items %}
+              {% if code != "auto" %}
+                <option value="{{ code }}" {% if code == "hi" %}selected{% endif %}>{{ name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="panes">
+        <div class="pane">
+          <textarea id="inputText" class="pane-text" maxlength="5000"
+            placeholder="Start typing to translate..."></textarea>
+          <div class="pane-footer">
+            <span class="char-counter"><span id="charCount">0</span> / 5000</span>
+            <div class="pane-actions">
+              <button id="clearBtn" class="icon-btn" title="Clear text"><i class="fa-solid fa-eraser"></i></button>
+              <button id="listenInputBtn" class="icon-btn" title="Listen (source text)"><i class="fa-solid fa-volume-high"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane pane-output">
+          <div id="outputText" class="pane-text pane-output-text" aria-live="polite"></div>
+          <div id="loadingSpinner" class="loading-spinner d-none">
+            <span class="spinner-border spinner-border-sm"></span> Translating…
+          </div>
+          <div class="pane-footer">
+            <span class="char-counter" id="outputCharCount"></span>
+            <div class="pane-actions">
+              <button id="copyBtn" class="icon-btn" title="Copy translation"><i class="fa-solid fa-copy"></i></button>
+              <button id="listenOutputBtn" class="icon-btn" title="Listen (translation)"><i class="fa-solid fa-volume-high"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="errorBanner" class="error-banner d-none" role="alert"></div>
+
+      <div class="action-row">
+        <button id="translateBtn" class="btn-translate">
+          <i class="fa-solid fa-language"></i> Translate
+        </button>
+      </div>
+    </section>
+
+    <section class="history-section">
+      <div class="history-header">
+        <h2><i class="fa-regular fa-clock"></i> Recent translations</h2>
+        <button id="refreshHistoryBtn" class="btn-link-ghost">Refresh</button>
+      </div>
+      <div id="historyList" class="history-list">
+        <p class="history-empty">Your translated phrases will appear here.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container text-center py-4">
+      <p>Built with Django &amp; deep-translator · No paid API required</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="app-toast" role="status"></div>
+  <audio id="audioPlayer" class="d-none"></audio>
+
+  {{ languages|json_script:"languages-data" }}
+  <script>
+    // Data handed off from Django template to JS (safely, as JSON)
+    window.__LANGUAGES__ = JSON.parse(document.getElementById('languages-data').textContent);
+  </script>
+  <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
